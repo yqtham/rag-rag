@@ -777,10 +777,24 @@ const RAW_ASSETS: RawAssetInput[] = [
   },
 ];
 
-export const INITIAL_MARKETS_DATA: MarketAsset[] = RAW_ASSETS.map(asset => ({
-  ...asset,
-  sparkline: extractSparkline(asset.candles),
-}));
+export const INITIAL_MARKETS_DATA: MarketAsset[] = RAW_ASSETS.map(asset => {
+  const sparkline = extractSparkline(asset.candles);
+  const sma200 = Number((asset.price * (asset.changePercent > 0 ? 0.94 : 1.05)).toFixed(2));
+  const rsiBase = 50 + asset.changePercent * 5.2;
+  const rsi14 = Number(Math.max(14, Math.min(88, rsiBase)).toFixed(1));
+  const beta = Number((asset.category === 'crypto' ? 2.35 : asset.category === 'stocks' ? 1.22 : 0.78).toFixed(2));
+  const atr = Number((asset.price * (asset.category === 'crypto' ? 0.042 : 0.016)).toFixed(2));
+
+  return {
+    ...asset,
+    sparkline,
+    rsi14,
+    sma200,
+    aboveSma200: asset.price >= sma200,
+    beta,
+    atr,
+  };
+});
 
 export const MOCK_ECONOMIC_CALENDAR: EconomicEvent[] = [
   {

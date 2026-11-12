@@ -1,5 +1,18 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { MarketAsset, MarketCategory, PaperPosition, TradeOrder } from '../types/market';
+import {
+  MarketAsset,
+  MarketCategory,
+  PaperPosition,
+  TradeOrder,
+  MultiChartLayout,
+  ChartStyle,
+  DrawingTool,
+  DrawingItem,
+  IndicatorConfig,
+  PriceAlert,
+  OrderBookData,
+  TradePrint,
+} from '../types/market';
 import { INITIAL_MARKETS_DATA } from '../data/mockMarkets';
 
 interface PortfolioState {
@@ -32,12 +45,65 @@ interface MarketContextType {
     sessionName: string;
     countdown: string;
   };
+
+  // PRO Features
+  isProMode: boolean;
+  setIsProMode: (pro: boolean) => void;
+  multiChartLayout: MultiChartLayout;
+  setMultiChartLayout: (layout: MultiChartLayout) => void;
+  multiChartSymbols: string[];
+  setMultiChartSymbols: React.Dispatch<React.SetStateAction<string[]>>;
+  activeChartIndex: number;
+  setActiveChartIndex: (idx: number) => void;
+  chartStyle: ChartStyle;
+  setChartStyle: (style: ChartStyle) => void;
+  activeTool: DrawingTool;
+  setActiveTool: (tool: DrawingTool) => void;
+  drawings: DrawingItem[];
+  addDrawing: (drawing: DrawingItem) => void;
+  removeDrawing: (id: string) => void;
+  clearDrawings: () => void;
+  indicators: IndicatorConfig;
+  toggleIndicator: (key: keyof IndicatorConfig) => void;
+  alerts: PriceAlert[];
+  addAlert: (symbol: string, targetPrice: number, condition: 'ABOVE' | 'BELOW', message?: string) => void;
+  removeAlert: (id: string) => void;
+  triggeredAlerts: PriceAlert[];
+  dismissTriggeredAlert: (id: string) => void;
+  soundEnabled: boolean;
+  setSoundEnabled: (enabled: boolean) => void;
+  getOrderBook: (symbol: string) => OrderBookData;
+  tapePrints: TradePrint[];
+  isAlertsModalOpen: boolean;
+  setIsAlertsModalOpen: (open: boolean) => void;
 }
 
 const MarketContext = createContext<MarketContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_WATCHLIST_KEY = 'apex_markets_watchlist';
 const LOCAL_STORAGE_PORTFOLIO_KEY = 'apex_markets_portfolio';
+const LOCAL_STORAGE_ALERTS_KEY = 'apex_markets_alerts';
+const LOCAL_STORAGE_DRAWINGS_KEY = 'apex_markets_drawings';
+
+function playTone(freq = 880, type: OscillatorType = 'sine', duration = 0.15) {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.06, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch {
+    // ignore
+  }
+}
 
 export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [assets, setAssets] = useState<MarketAsset[]>(INITIAL_MARKETS_DATA);
@@ -45,9 +111,132 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [activeCategory, setActiveCategory] = useState<MarketCategory | 'all' | 'watchlist'>('all');
   const [isWatchlistOpen, setIsWatchlistOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isAlertsModalOpen, setIsAlertsModalOpen] = useState(false);
   const [flashMap, setFlashMap] = useState<Record<string, 'up' | 'down'>>({});
 
-  // Initialize Watchlist
+  // Pro mode toggle & Multi-chart layout
+  const [isProMode, setIsProMode] = useState<boolean>(true); // default to Pro experience!
+  const [multiChartLayout, setMultiChartLayout] = useState<MultiChartLayout>('1x1');
+  const [multiChartSymbols, setMultiChartSymbols] = useState<string[]>(['NVDA', 'SPX', 'BTCUSD', 'AAPL']);
+  const [activeChartIndex, setActiveChartIndex] = useState<number>(0);
+  const [chartStyle, setChartStyle] = useState<ChartStyle>('candles');
+  const [activeTool, setActiveTool] = useState<DrawingTool>('cursor');
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+
+  // Indicators config
+  const [indicators, setIndicators] = useState<IndicatorConfig>({
+    sma20: true,
+    sma50: false,
+    sma200: false,
+    ema9: false,
+    ema21: false,
+    bollinger: false,
+    vwap: false,
+    rsi: true,
+    macd: false,
+    volumeProfile: true,
+  });
+
+  const toggleIndicator = useCallback((key: keyof IndicatorConfig) => {
+    setIndicators(prev => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  // Drawings state
+  const [drawings, setDrawings] = useState<DrawingItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_DRAWINGS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_DRAWINGS_KEY, JSON.stringify(drawings));
+    } catch {
+      // ignore
+    }
+  }, [drawings]);
+
+  const addDrawing = useCallback((item: DrawingItem) => {
+    setDrawings(prev => [...prev, item]);
+  }, []);
+
+  const removeDrawing = useCallback((id: string) => {
+    setDrawings(prev => prev.filter(d => d.id !== id));
+  }, []);
+
+  const clearDrawings = useCallback(() => {
+    setDrawings([]);
+  }, []);
+
+  // Alerts state
+  const [alerts, setAlerts] = useState<PriceAlert[]>(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_ALERTS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {
+      // fallback
+    }
+    return [
+      {
+        id: 'al-1',
+        symbol: 'NVDA',
+        targetPrice: 140.0,
+        condition: 'ABOVE',
+        triggered: false,
+        createdAt: Date.now() - 3600000,
+        message: 'NVIDIA break above $140 resistance',
+      },
+      {
+        id: 'al-2',
+        symbol: 'BTCUSD',
+        targetPrice: 70000.0,
+        condition: 'ABOVE',
+        triggered: false,
+        createdAt: Date.now() - 7200000,
+        message: 'Bitcoin $70k milestone alert',
+      },
+    ];
+  });
+
+  const [triggeredAlerts, setTriggeredAlerts] = useState<PriceAlert[]>([]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_ALERTS_KEY, JSON.stringify(alerts));
+    } catch {
+      // ignore
+    }
+  }, [alerts]);
+
+  const addAlert = useCallback(
+    (symbol: string, targetPrice: number, condition: 'ABOVE' | 'BELOW', message?: string) => {
+      const newAlert: PriceAlert = {
+        id: 'alt-' + Date.now(),
+        symbol,
+        targetPrice,
+        condition,
+        triggered: false,
+        createdAt: Date.now(),
+        message: message || `${symbol} ${condition === 'ABOVE' ? 'rose above' : 'fell below'} $${targetPrice}`,
+      };
+      setAlerts(prev => [newAlert, ...prev]);
+    },
+    []
+  );
+
+  const removeAlert = useCallback((id: string) => {
+    setAlerts(prev => prev.filter(a => a.id !== id));
+  }, []);
+
+  const dismissTriggeredAlert = useCallback((id: string) => {
+    setTriggeredAlerts(prev => prev.filter(a => a.id !== id));
+  }, []);
+
+  // Watchlist state
   const [watchlist, setWatchlist] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_WATCHLIST_KEY);
@@ -55,10 +244,9 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch {
       // fallback
     }
-    return ['SPX', 'NVDA', 'AAPL', 'BTCUSD', 'XAUUSD', 'EURUSD'];
+    return ['SPX', 'NVDA', 'AAPL', 'BTCUSD', 'XAUUSD', 'EURUSD', 'MSFT', 'TSLA'];
   });
 
-  // Save watchlist
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_STORAGE_WATCHLIST_KEY, JSON.stringify(watchlist));
@@ -138,7 +326,6 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [orders, setOrders] = useState<TradeOrder[]>([]);
 
-  // Persist portfolio
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -150,10 +337,18 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [cashBalance, positions]);
 
-  // Real-time market tick simulation (subtle, authentic price jitter)
+  // Time & Sales (Live Tape) Stream
+  const [tapePrints, setTapePrints] = useState<TradePrint[]>(() => [
+    { id: 'tp-1', time: '14:24:02', price: 138.25, size: 200, side: 'BUY' },
+    { id: 'tp-2', time: '14:24:01', price: 138.20, size: 100, side: 'SELL' },
+    { id: 'tp-3', time: '14:23:59', price: 138.25, size: 450, side: 'BUY' },
+    { id: 'tp-4', time: '14:23:58', price: 138.22, size: 50, side: 'BUY' },
+    { id: 'tp-5', time: '14:23:55', price: 138.18, size: 300, side: 'SELL' },
+  ]);
+
+  // Real-time market tick simulation
   useEffect(() => {
     const interval = setInterval(() => {
-      // Pick 2-4 random assets to update
       const assetsToUpdateCount = Math.floor(Math.random() * 3) + 2;
       const targetIndices: number[] = [];
       while (targetIndices.length < assetsToUpdateCount) {
@@ -169,16 +364,17 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return prevAssets.map((asset, idx) => {
           if (!targetIndices.includes(idx)) return asset;
 
-          // Compute tick: 0.05% to 0.25% variance
-          const isUp = Math.random() > 0.47;
-          const variance = (Math.random() * 0.002 + 0.0003) * (isUp ? 1 : -1);
+          const isUp = Math.random() > 0.48;
+          const variance = (Math.random() * 0.0022 + 0.0003) * (isUp ? 1 : -1);
           const oldPrice = asset.price;
-          const newPrice = Number(Math.max(0.0001, oldPrice * (1 + variance)).toFixed(
-            asset.price > 100 ? 2 : asset.price > 1 ? 4 : 4
-          ));
+          const newPrice = Number(
+            Math.max(0.0001, oldPrice * (1 + variance)).toFixed(
+              asset.price > 100 ? 2 : asset.price > 1 ? 4 : 4
+            )
+          );
           const priceDiff = newPrice - oldPrice;
           const newChange = Number((asset.change + priceDiff).toFixed(2));
-          const baseOpen = asset.open || (newPrice - newChange);
+          const baseOpen = asset.open || newPrice - newChange;
           const newChangePercent = Number(((newChange / baseOpen) * 100).toFixed(2));
 
           newFlashes[asset.symbol] = isUp ? 'up' : 'down';
@@ -186,7 +382,7 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           // Update sparkline
           const newSparkline = [...asset.sparkline.slice(1), newPrice];
 
-          // Update last candle
+          // Update candles
           const candles = [...asset.candles];
           if (candles.length > 0) {
             const lastCandle = { ...candles[candles.length - 1] };
@@ -194,6 +390,39 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             if (newPrice > lastCandle.high) lastCandle.high = newPrice;
             if (newPrice < lastCandle.low) lastCandle.low = newPrice;
             candles[candles.length - 1] = lastCandle;
+          }
+
+          // Check Price Alerts
+          alerts.forEach(al => {
+            if (al.symbol === asset.symbol && !al.triggered) {
+              const conditionMet =
+                (al.condition === 'ABOVE' && newPrice >= al.targetPrice) ||
+                (al.condition === 'BELOW' && newPrice <= al.targetPrice);
+
+              if (conditionMet) {
+                const triggeredItem = { ...al, triggered: true };
+                setTriggeredAlerts(prev => [triggeredItem, ...prev]);
+                if (soundEnabled) playTone(980, 'sine', 0.25);
+              }
+            }
+          });
+
+          // Add to streaming tape if this is the active symbol
+          const currentActiveSymbol = selectedAsset?.symbol || 'NVDA';
+          if (asset.symbol === currentActiveSymbol) {
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            const size = Math.floor(Math.random() * 400 + 20);
+            setTapePrints(prev => [
+              {
+                id: 'tp-' + Date.now() + Math.random(),
+                time: timeStr,
+                price: newPrice,
+                size,
+                side: isUp ? 'BUY' : 'SELL',
+              },
+              ...prev.slice(0, 30),
+            ]);
           }
 
           return {
@@ -213,20 +442,19 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       setFlashMap(prev => ({ ...prev, ...newFlashes }));
 
-      // Clear flashes after animation
       setTimeout(() => {
         setFlashMap(prev => {
           const updated = { ...prev };
           Object.keys(newFlashes).forEach(k => delete updated[k]);
           return updated;
         });
-      }, 1300);
-    }, 2200);
+      }, 1200);
+    }, 2000);
 
     return () => clearInterval(interval);
-  }, [assets.length]);
+  }, [assets.length, alerts, selectedAsset?.symbol, soundEnabled]);
 
-  // Keep selectedAsset updated when assets change
+  // Keep selectedAsset updated
   useEffect(() => {
     if (selectedAsset) {
       const refreshed = assets.find(a => a.symbol === selectedAsset.symbol);
@@ -236,7 +464,53 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [assets, selectedAsset]);
 
-  // Update positions current price and unrealized P&L
+  // Level 2 Order Book Generator
+  const getOrderBook = useCallback(
+    (symbol: string): OrderBookData => {
+      const asset = assets.find(a => a.symbol === symbol) || assets[0];
+      const p = asset.price;
+      const step = p > 1000 ? 5 : p > 100 ? 0.05 : p > 1 ? 0.01 : 0.0001;
+
+      const bids = [];
+      const asks = [];
+      let totalBid = 0;
+      let totalAsk = 0;
+
+      for (let i = 1; i <= 8; i++) {
+        const bidPrice = Number((p - i * step).toFixed(p > 100 ? 2 : 4));
+        const bidSize = Math.floor(Math.random() * 250 + 50) * (10 - i);
+        totalBid += bidSize;
+        bids.push({
+          price: bidPrice,
+          size: bidSize,
+          total: totalBid,
+          depthPercent: 0,
+        });
+
+        const askPrice = Number((p + i * step).toFixed(p > 100 ? 2 : 4));
+        const askSize = Math.floor(Math.random() * 250 + 50) * (10 - i);
+        totalAsk += askSize;
+        asks.push({
+          price: askPrice,
+          size: askSize,
+          total: totalAsk,
+          depthPercent: 0,
+        });
+      }
+
+      const maxTotal = Math.max(totalBid, totalAsk) || 1;
+      bids.forEach(b => (b.depthPercent = Math.min(100, (b.total / maxTotal) * 100)));
+      asks.forEach(a => (a.depthPercent = Math.min(100, (a.total / maxTotal) * 100)));
+
+      const spread = Number((asks[0].price - bids[0].price).toFixed(4));
+      const spreadPercent = Number(((spread / p) * 100).toFixed(3));
+
+      return { bids, asks, spread, spreadPercent };
+    },
+    [assets]
+  );
+
+  // Position updates
   const updatedPositions = useMemo(() => {
     return positions.map(pos => {
       const asset = assets.find(a => a.symbol === pos.symbol);
@@ -328,7 +602,6 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           }
         });
       } else {
-        // SELL
         const existing = positions.find(p => p.symbol === symbol);
         if (!existing || existing.shares < shares) {
           return { success: false, message: `Cannot sell ${shares} shares. You currently own ${existing ? existing.shares : 0} shares.` };
@@ -356,7 +629,10 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
       }
 
-      // Record order
+      if (soundEnabled) {
+        playTone(type === 'BUY' ? 880 : 440, 'triangle', 0.2);
+      }
+
       const newOrder: TradeOrder = {
         id: 'ord-' + Date.now(),
         symbol,
@@ -372,10 +648,10 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       return {
         success: true,
-        message: `Order Executed: ${type} ${shares} ${symbol} @ $${price.toFixed(2)} ($${totalAmount.toFixed(2)})`,
+        message: `Executed: ${type} ${shares} ${symbol} @ $${price.toFixed(2)} ($${totalAmount.toFixed(2)})`,
       };
     },
-    [assets, cashBalance, positions]
+    [assets, cashBalance, positions, soundEnabled]
   );
 
   const closePosition = useCallback(
@@ -395,13 +671,11 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     [assets, executeOrder, positions]
   );
 
-  // Market status ticker calculation
   const marketStatus = useMemo(() => {
     const d = new Date();
     const utcHours = d.getUTCHours();
     const utcDay = d.getUTCDay();
     const isWeekend = utcDay === 0 || utcDay === 6;
-    // NYSE is 13:30 to 20:00 UTC (9:30 AM to 4:00 PM EST)
     const isNYSEOpen = !isWeekend && utcHours >= 13 && utcHours < 20;
 
     return {
@@ -442,6 +716,37 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         flashMap,
         portfolio: portfolioState,
         marketStatus,
+
+        // Pro features
+        isProMode,
+        setIsProMode,
+        multiChartLayout,
+        setMultiChartLayout,
+        multiChartSymbols,
+        setMultiChartSymbols,
+        activeChartIndex,
+        setActiveChartIndex,
+        chartStyle,
+        setChartStyle,
+        activeTool,
+        setActiveTool,
+        drawings,
+        addDrawing,
+        removeDrawing,
+        clearDrawings,
+        indicators,
+        toggleIndicator,
+        alerts,
+        addAlert,
+        removeAlert,
+        triggeredAlerts,
+        dismissTriggeredAlert,
+        soundEnabled,
+        setSoundEnabled,
+        getOrderBook,
+        tapePrints,
+        isAlertsModalOpen,
+        setIsAlertsModalOpen,
       }}
     >
       {children}
