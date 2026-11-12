@@ -1,0 +1,6 @@
+{
+  "name": "Apex Markets",
+  "description": "Institutional-grade financial market intelligence platform inspired by TradingView Markets. Track real-time global indices, equities, crypto, forex, technical charts, heatmaps, and simulated order execution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

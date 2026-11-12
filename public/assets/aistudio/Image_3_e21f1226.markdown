@@ -1,0 +1,229 @@
+---
+name: Apex Precision
+colors:
+  surface: '#0f131e'
+  surface-dim: '#0f131e'
+  surface-bright: '#353945'
+  surface-container-lowest: '#0a0e19'
+  surface-container-low: '#171b26'
+  surface-container: '#1b1f2b'
+  surface-container-high: '#262a35'
+  surface-container-highest: '#313441'
+  on-surface: '#dfe2f2'
+  on-surface-variant: '#c3c5d8'
+  inverse-surface: '#dfe2f2'
+  inverse-on-surface: '#2c303c'
+  outline: '#8d90a2'
+  outline-variant: '#434656'
+  surface-tint: '#b6c4ff'
+  primary: '#b6c4ff'
+  on-primary: '#002780'
+  primary-container: '#2962ff'
+  on-primary-container: '#f7f5ff'
+  inverse-primary: '#004ee8'
+  secondary: '#c3c6d5'
+  on-secondary: '#2c303c'
+  secondary-container: '#434653'
+  on-secondary-container: '#b1b4c3'
+  tertiary: '#ffb59a'
+  on-tertiary: '#5b1b00'
+  tertiary-container: '#c74500'
+  on-tertiary-container: '#fff4f1'
+  error: '#ffb4ab'
+  on-error: '#690005'
+  error-container: '#93000a'
+  on-error-container: '#ffdad6'
+  primary-fixed: '#dce1ff'
+  primary-fixed-dim: '#b6c4ff'
+  on-primary-fixed: '#001550'
+  on-primary-fixed-variant: '#003ab3'
+  secondary-fixed: '#dfe2f1'
+  secondary-fixed-dim: '#c3c6d5'
+  on-secondary-fixed: '#171b26'
+  on-secondary-fixed-variant: '#434653'
+  tertiary-fixed: '#ffdbcf'
+  tertiary-fixed-dim: '#ffb59a'
+  on-tertiary-fixed: '#380d00'
+  on-tertiary-fixed-variant: '#802a00'
+  background: '#0f131e'
+  on-background: '#dfe2f2'
+  surface-variant: '#313441'
+  bullish-green: '#089981'
+  bearish-red: '#f23645'
+  surface-panel: '#1e222d'
+  surface-card: '#2a2e39'
+  border-subtle: '#363a45'
+  text-primary: '#f0f3fa'
+  text-muted: '#787b86'
+typography:
+  display-lg:
+    fontFamily: Inter
+    fontSize: 40px
+    fontWeight: '700'
+    lineHeight: 48px
+    letterSpacing: -0.02em
+  display-lg-mobile:
+    fontFamily: Inter
+    fontSize: 28px
+    fontWeight: '700'
+    lineHeight: 36px
+    letterSpacing: -0.01em
+  headline-lg:
+    fontFamily: Inter
+    fontSize: 24px
+    fontWeight: '600'
+    lineHeight: 32px
+    letterSpacing: -0.01em
+  headline-md:
+    fontFamily: Inter
+    fontSize: 20px
+    fontWeight: '600'
+    lineHeight: 28px
+  headline-sm:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: '600'
+    lineHeight: 24px
+  body-lg:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: '400'
+    lineHeight: 24px
+  body-md:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: '400'
+    lineHeight: 20px
+  body-sm:
+    fontFamily: Inter
+    fontSize: 13px
+    fontWeight: '400'
+    lineHeight: 18px
+  tabular-data-lg:
+    fontFamily: Inter
+    fontSize: 18px
+    fontWeight: '600'
+    lineHeight: 24px
+    letterSpacing: '0'
+  tabular-data-md:
+    fontFamily: Inter
+    fontSize: 13px
+    fontWeight: '500'
+    lineHeight: 18px
+    letterSpacing: '0'
+  tabular-data-sm:
+    fontFamily: Inter
+    fontSize: 11px
+    fontWeight: '500'
+    lineHeight: 16px
+    letterSpacing: '0'
+  label-md:
+    fontFamily: Inter
+    fontSize: 12px
+    fontWeight: '600'
+    lineHeight: 16px
+    letterSpacing: 0.03em
+  label-sm:
+    fontFamily: Inter
+    fontSize: 10px
+    fontWeight: '700'
+    lineHeight: 14px
+    letterSpacing: 0.05em
+rounded:
+  sm: 0.125rem
+  DEFAULT: 0.25rem
+  md: 0.375rem
+  lg: 0.5rem
+  xl: 0.75rem
+  full: 9999px
+spacing:
+  gutter: 0.75rem
+  gutter-desktop: 1rem
+  margin: 0.75rem
+  margin-desktop: 1.5rem
+  space-xxs: 0.125rem
+  space-xs: 0.25rem
+  space-sm: 0.5rem
+  space-md: 0.75rem
+  space-lg: 1rem
+  space-xl: 1.5rem
+  space-xxl: 2rem
+---
+
+## Brand & Style
+
+This design system embodies high-frequency analytical clarity, institutional reliability, and seamless tactical execution. Geared toward active traders, quantitative analysts, and financial professionals, the interface strips away decorative friction to maximize data density, pattern recognition, and rapid decision-making. 
+
+The aesthetic is **Precision Dark Minimalist** grounded in high-contrast data architecture. Visual weight is strictly allocated to market signals: price trajectory, volume shifts, and actionable order routing. Neutral slate-black surfaces diminish eye fatigue during extensive multi-monitor sessions, while calibrated status hues direct immediate attention to market deltas without visual clutter.
+
+## Colors
+
+The palette utilizes pure functional chromatic anchors against deep, absorbing backdrops:
+- **Primary (`#2962FF`):** Reserved for primary interactive execution paths, selected tab indicators, focused inputs, and prominent tool triggers.
+- **Surface & Canvas (`#131722` base canvas, `#1E222D` elevated panels, `#2A2E39` hover/active states):** Neutral slate tones engineered to eliminate glare and create structural grouping without harsh separation lines.
+- **Directional Signals (`#089981` Bullish, `#F23645` Bearish):** Standardized institutional hues configured for immediate peripheral cognition across tickers, candlesticks, order book depths, and financial delta badges.
+
+Text hierarchy strictly respects contrast ratios on `#131722`:
+- **Primary Text (`#F0F3FA`):** Maximum legibility for prices, metrics, and core identifiers.
+- **Muted Text (`#787B86`):** Secondary metadata, market units, timestamps, and column headers.
+
+## Typography
+
+The type system relies on **Inter** with universal application of OpenType tabular figures (`font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1, 'cv05' 1;`) across all data displays, financial listings, order ladders, and telemetry matrices. 
+
+- **Scale Rhythm:** Tightly scaled body and label tiers maintain high line efficiency without degrading scanability. 
+- **Tabular Alignment:** Numeric values must never jitter on dynamic price re-renders; fixed digit widths are strictly enforced across `tabular-data-*` classes.
+- **Labels & Micro-Headers:** All uppercase field qualifiers utilize `label-sm` or `label-md` with slight positive tracking to ensure absolute clarity at low physical screen real estate.
+
+## Layout & Spacing
+
+Layout geometry follows a **high-density module grid** constructed to support modular dashboard tiles, side-by-side order panes, and expansive multi-column financial sheets.
+
+- **Grid Strategy:** A fluid 12-column layout on desktop viewports transitioning into collapsible multi-panel workspaces. Desktop screens collapse gutters to `0.75rem` or `1rem` to maximize actionable chart/data viewport.
+- **Breakpoints:**
+  - `Mobile` (< 768px): Single-column stacked stream, sticky ticker ribbons, horizontal scroll for multi-field data tables, simplified compact toolbar.
+  - `Tablet` (768px – 1199px): Dual-pane split (6/6 or 8/4 grid) accommodating chart alongside order book or watchlist.
+  - `Desktop` (1200px+): Full multi-dock workspace with docking splitters, pinned order execution ribbons, and dense dynamic matrices.
+- **Spacing Principle:** Spacing between atomic data elements defaults to `space-xs` (4px) and `space-sm` (8px). Large structural margins are reserved strictly for high-level module isolation.
+
+## Elevation & Depth
+
+Visual hierarchy rejects exaggerated, blurred dropshadows in favor of **structural containment through tonal stepping and 1px crisp hairline borders**:
+
+- **Level 0 (Canvas Base):** `#131722` serves as the primary viewport floor.
+- **Level 1 (Panels & Toolbars):** `#1E222D` with a perimeter `1px solid #363A45` separation for side drawers, data grid blocks, and chart header controls.
+- **Level 2 (Popovers, Overlays, Context Menus):** `#2A2E39` reinforced by an ambient, low-spread dark shadow (`0 8px 24px rgba(0, 0, 0, 0.45)`) combined with a `1px solid #434651` border for crisp differentiation against complex underlying data.
+- **Active / Interactive Hover:** Subtle background shift (+4% lightness) rather than geometric elevation or heavy transform translations.
+
+## Shapes
+
+The interface employs **Soft (`1`) geometry** to maintain the professional, engineered aesthetic of precision analytics hardware:
+
+- **Base Corner Radius:** Standard inputs, buttons, chips, and table cells employ a tight `0.25rem` (4px) radius.
+- **Containers & Modals:** Primary widget modules and dialog windows max out at `0.5rem` (8px).
+- **Tabular Rows & Sparklines:** Zero radius (`0px`) within table cells and chart canvases to retain boundary alignment across strict Cartesian coordinates.
+
+## Components
+
+### Buttons
+- **Primary Execution Button:** Solid `#2962FF` background, `#FFFFFF` text, `4px` corner radius, `space-sm` vertical padding by `space-lg` horizontal padding. Font: `label-md`. Active state: brightness scale (90%).
+- **Market Directional Buttons (Buy/Sell):** Full-bleed or solid blocks using `#089981` (Buy) and `#F23645` (Sell) with high-contrast `#FFFFFF` text and tabular real-time bid/ask rates embedded.
+- **Tertiary / Icon Buttons:** Borderless transparent `#1E222D` surfaces with `#787B86` icon fills, shifting to `#F0F3FA` text and `#2A2E39` fill on hover.
+
+### High-Density Data Tables
+- **Rows & Metrics:** Fixed row heights (32px compact, 40px standard) using `tabular-data-md`.
+- **Headers:** Sticky positioning, background `#1E222D`, `label-sm` uppercase text in `#787B86`, with integrated sort state chevrons.
+- **Numerical Alignment:** Price and percent change fields are strictly right-aligned with signed values (+ / -) colored selectively in Bullish (`#089981`) or Bearish (`#F23645`). Symbol/Asset names are left-aligned with icon avatars.
+
+### Market Overview Sparklines
+- **Trend Visualizers:** Inline micro-charts (60px–100px width, 24px–32px height) devoid of axis lines or grid marks.
+- **Color Mapping:** Stroke matches current timeframe delta: `#089981` if the net period is positive, `#F23645` if negative. An optional subtle vertical gradient fill (8% opacity to 0% opacity) extends downward to the baseline.
+
+### Tabs & View Switchers
+- **Segmented Platform Tabs:** Segmented rail controls resting in `#131722` housing. Inactive tabs display `#787B86` text; active tabs feature `#2A2E39` background fill with crisp `#F0F3FA` text and a bottom border indicator of `2px solid #2962FF`.
+
+### Input Fields & Selectors
+- **Numeric Order Fields:** Direct price/quantity inputs utilizing `#131722` fills, bordered by `1px solid #363A45`, focusing to `1px solid #2962FF`. Integrated stepper icons (`+` / `-`) embedded on right margins with monospaced digit readouts.
+
+### Chips & Badges
+- **Status/Delta Badges:** Compact pills with `4px` corner radius. Soft tint backgrounds (12% opacity of signal color) combined with vibrant 100% foreground text (`rgba(8, 153, 129, 0.12)` fill with `#089981` text for bullish; `rgba(242, 54, 69, 0.12)` fill with `#F23645` text for bearish).
